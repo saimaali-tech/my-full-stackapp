@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    environment {
+        NODE_VERSION = '18' // adjust if needed
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code...'
+                checkout scm
+            }
+        }
+
+        stage('Setup Node') {
+            steps {
+                echo "Setting up Node.js ${env.NODE_VERSION}..."
+                // optional if Node is already installed on agent
+                sh "node -v"
+                sh "npm -v"
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing backend dependencies...'
+                dir('backend') {
+                    sh 'npm install'
+                }
+
+                echo 'Installing frontend dependencies...'
+                dir('frontend') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building frontend...'
+                dir('frontend') {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running backend tests (if any)...'
+                dir('backend') {
+                    // replace with your test command if you have tests
+                    sh 'echo "No backend tests configured yet"'
+                }
+
+                echo 'Running frontend tests...'
+                dir('frontend') {
+                    sh 'npm test -- --watchAll=false'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build & Test completed successfully!'
+        }
+        failure {
+            echo 'Build or Test failed.'
+        }
+    }
+}
